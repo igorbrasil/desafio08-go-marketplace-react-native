@@ -31,22 +31,79 @@ const CartProvider: React.FC = ({ children }) => {
   useEffect(() => {
     async function loadProducts(): Promise<void> {
       // TODO LOAD ITEMS FROM ASYNC STORAGE
+      const cartsProducts = await AsyncStorage.getItem(
+        '@GoMarketPlace:products',
+      );
+
+      if (cartsProducts) {
+        setProducts(JSON.parse(cartsProducts));
+      }
     }
 
     loadProducts();
   }, []);
 
-  const addToCart = useCallback(async product => {
-    // TODO ADD A NEW ITEM TO THE CART
-  }, []);
+  const addToCart = useCallback(
+    async product => {
+      // TODO ADD A NEW ITEM TO THE CART
+      //  await AsyncStorage.clear();
+      const prod: Product = product;
+      const productExists = products.filter(
+        productt => productt.id === prod.id,
+      );
+      if (!productExists[0]) {
+        prod.quantity = 1;
 
-  const increment = useCallback(async id => {
-    // TODO INCREMENTS A PRODUCT QUANTITY IN THE CART
-  }, []);
+        setProducts([...products, product]);
+      } else {
+        products.map(p => {
+          if (p.id === product.id) {
+            p.quantity += 1;
+          }
+        });
 
-  const decrement = useCallback(async id => {
-    // TODO DECREMENTS A PRODUCT QUANTITY IN THE CART
-  }, []);
+        setProducts([...products]);
+      }
+      await AsyncStorage.multiSet([
+        ['@GoMarketPlace:products', JSON.stringify(products)],
+      ]);
+    },
+    [products],
+  );
+
+  const increment = useCallback(
+    async id => {
+      // TODO INCREMENTS A PRODUCT QUANTITY IN THE CART
+      products.map(p => {
+        if (p.id === id) {
+          p.quantity += 1;
+        }
+      });
+
+      setProducts([...products]);
+      await AsyncStorage.multiSet([
+        ['@GoMarketPlace:products', JSON.stringify(products)],
+      ]);
+    },
+    [products],
+  );
+
+  const decrement = useCallback(
+    async id => {
+      // TODO DECREMENTS A PRODUCT QUANTITY IN THE CART
+      products.map(p => {
+        if (p.id === id) {
+          p.quantity -= 1;
+        }
+      });
+
+      setProducts([...products]);
+      await AsyncStorage.multiSet([
+        ['@GoMarketPlace:products', JSON.stringify(products)],
+      ]);
+    },
+    [products],
+  );
 
   const value = React.useMemo(
     () => ({ addToCart, increment, decrement, products }),
